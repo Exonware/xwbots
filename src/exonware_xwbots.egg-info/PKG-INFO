@@ -1,0 +1,120 @@
+Metadata-Version: 2.4
+Name: exonware-xwbots
+Version: 0.0.1.0
+Summary: Multi-platform bot framework for the eXonware ecosystem
+Author: eXonware Backend Team
+License: MIT
+Project-URL: Homepage, https://github.com/exonware/xwbots
+Project-URL: Documentation, https://github.com/exonware/xwbots/docs
+Project-URL: Repository, https://github.com/exonware/xwbots
+Project-URL: Issues, https://github.com/exonware/xwbots/issues
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Provides-Extra: lazy
+Provides-Extra: full
+Requires-Dist: cachebox; extra == "full"
+Requires-Dist: cachetools; extra == "full"
+Requires-Dist: pylru; extra == "full"
+Requires-Dist: msgspec; extra == "full"
+Requires-Dist: orjson; extra == "full"
+Requires-Dist: hyperlight_hyperjson; extra == "full"
+Requires-Dist: json5; extra == "full"
+Requires-Dist: PyYAML; extra == "full"
+Requires-Dist: tomli-w; extra == "full"
+Requires-Dist: xmltodict; extra == "full"
+Requires-Dist: dicttoxml; extra == "full"
+Requires-Dist: msgpack; extra == "full"
+Requires-Dist: cbor2; extra == "full"
+Requires-Dist: pymongo; extra == "full"
+Requires-Dist: httpx; extra == "full"
+Requires-Dist: brotli; extra == "full"
+Requires-Dist: zstandard; extra == "full"
+Requires-Dist: rich; extra == "full"
+Requires-Dist: attrs; extra == "full"
+
+# xwbots
+
+**Multi-platform bot framework.** Single API for Telegram, Discord, Slack; commands, lifecycle, crash recovery; integration with xwstorage, xwauth, xwentity, xwaction, xwai. Per project docs.
+
+*Full features and examples: [README_LONG.md](README_LONG.md).*
+
+**Company:** eXonware.com · **Author:** eXonware Backend Team · **Email:** connect@exonware.com  
+**Version:** See [version.py](src/exonware/xwbots/version.py) or PyPI. · **Updated:** See version.py (`__date__`).
+
+[![Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://exonware.com)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+---
+
+## Install
+
+```bash
+pip install exonware-xwbots
+# Optional: [lazy] or [full]
+pip install exonware-xwbots[lazy]
+pip install exonware-xwbots[full]
+```
+
+---
+
+## Quick start
+
+For **Telegram**, use **xwchat** directly (xwbots does not ship a platform adapter; xwchat owns the transport):
+
+```python
+from exonware.xwchat import Telegram as TelegramChatProvider
+
+provider = TelegramChatProvider(api_token="your-telegram-key")
+provider.set_message_handler(lambda ctx: "Hello!")  # or wire an XWBotCommand
+import asyncio
+asyncio.run(provider.start_listening())
+```
+
+See [examples/](examples/) for Karizma and Parrot bots that wire xwchat + command handlers.
+
+---
+
+## What you get
+
+| Area | What's in it |
+|------|----------------|
+| **Platforms** | Telegram via **xwchat** (use xwchat's provider directly; see examples). |
+| **Commands** | Command framework; xwaction integration; role-based access (xwauth). |
+| **Lifecycle** | Start, stop, restart; crash recovery. |
+| **Ecosystem** | xwstorage, xwauth, xwentity, xwaction, xwai. |
+
+---
+
+## Development (editable xwchat)
+
+XWBots uses **xwchat** for Telegram. To work on both with live changes:
+
+- **Recommended (exonware repo):** From repo root, run the shared venv script so the xwbots `.venv` gets all xw libs (including xwchat) in editable mode:
+  ```bash
+  python scripts/venvs/setup_venvs.py --packages-only
+  ```
+  Then activate `xwbots/.venv` and use it; xwchat will be installed as `-e ../xwchat`.
+
+- **If you created xwbots' venv manually:** Ensure xwchat is editable in the current environment:
+  ```bash
+  # From exonware repo root or from xwbots
+  python xwbots/scripts/ensure_editable_xwchat.py
+  ```
+
+---
+
+## Docs and tests
+
+- **Start:** [docs/INDEX.md](docs/INDEX.md) or [docs/](docs/).
+- **Tests:** Run from project root per project layout.
+
+---
+
+## License and links
+
+MIT — see [LICENSE](LICENSE). **Homepage:** https://exonware.com · **Repository:** https://github.com/exonware/xwbots  
+
+Contributing → CONTRIBUTING.md · Security → SECURITY.md (when present).
+
+*Built with ❤️ by eXonware.com - Revolutionizing Python Development Since 2025*

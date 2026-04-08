@@ -1,0 +1,65 @@
+# Source size (src/*): ~103.9 KB
+[build-system]
+requires = [
+    "setuptools>=68.0",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic.version]
+attr = "exonware.xwbots.version.__version__"
+
+[tool.setuptools.packages.find]
+where = [
+    "src",
+]
+
+[tool.setuptools.package-data]
+"*" = [
+    "*.txt",
+    "*.md",
+    "*.json",
+    "*.yaml",
+    "*.yml",
+]
+
+[project]
+name = "xwbots"
+dynamic = [
+    "version",
+]
+description = "Convenience wrapper for exonware-xwbots - provides 'import xwbots' alias"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "eXonware Backend Team", email = "connect@exonware.com" },
+]
+maintainers = []
+keywords = []
+classifiers = []
+dependencies = [
+    "exonware-xwbots",
+]
+
+[project.license]
+text = "Apache-2.0"
+
+[project.optional-dependencies]
+lazy = [
+    "exonware-xwbots[lazy]",
+]
+api = [
+    "exonware-xwbots[api]",
+]
+full = [
+    "exonware-xwbots[full]",
+]
+dev = [
+    "exonware-xwbots[dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/exonware/xwbots"
+Documentation = "https://github.com/exonware/xwbots/docs"
+Repository = "https://github.com/exonware/xwbots"
+Issues = "https://github.com/exonware/xwbots/issues"

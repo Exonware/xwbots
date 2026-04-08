@@ -1,0 +1,100 @@
+
+# Source size (src/*): ~103.9 KB
+[build-system]
+  requires = ["setuptools>=68.0", "wheel"]
+  build-backend = "setuptools.build_meta"
+
+[tool]
+
+  [tool.setuptools]
+
+    [tool.setuptools.dynamic]
+
+      [tool.setuptools.dynamic.version]
+        attr = "exonware.xwbots.version.__version__"
+
+    [tool.setuptools.packages]
+
+      [tool.setuptools.packages.find]
+        where = ["src"]
+
+    [tool.setuptools.package-data]
+      "*" = ["*.txt", "*.md", "*.json", "*.yaml", "*.yml"]
+
+[project]
+  name = "exonware-xwbots"
+  dynamic = ["version"]
+  description = "Multi-platform bot framework for the eXonware ecosystem"
+  readme = "README.md"
+  requires-python = ">=3.12"
+  authors = [{ name = "eXonware Backend Team", email = "connect@exonware.com" }]
+  maintainers = []
+  keywords = []
+  classifiers = []
+  dependencies = []
+
+  [project.license]
+    text = "Apache-2.0"
+
+  [project.optional-dependencies]
+    lazy = [
+      "exonware-xwlazy",
+    ]
+    api = [
+      "fastapi>=0.104.0",
+      "uvicorn[standard]>=0.24.0",
+    ]
+    full = [
+      "fastapi>=0.104.0",
+      "uvicorn[standard]>=0.24.0",
+      "cachebox",
+      "cachetools",
+      "pylru",
+      "msgspec",
+      "orjson",
+      "hyperlight_hyperjson",
+      "json5",
+      "PyYAML",
+      "tomli-w",
+      "xmltodict",
+      "dicttoxml",
+      "msgpack",
+      "cbor2",
+      "pymongo",
+      "httpx",
+      "brotli",
+      "zstandard",
+      "rich",
+      "attrs",
+      "tomli",
+      "pydantic",
+      "email-validator",
+      "python-multipart",
+      "ujson",
+      "requests",
+      "numpy",
+      "scikit-learn",
+      "cython",
+      "lz4",
+      "uarray",
+      "pandas",
+      "pyarrow",
+      "cloudpickle",
+      "pytz",
+      "numexpr",
+      "bottleneck",
+    ]
+    dev = [
+      "exonware-xwbots[full]",
+      "pytest>=7.0.0",
+      "pytest-asyncio>=0.21.0",
+      "pytest-cov>=4.0.0",
+      "black>=23.0.0",
+      "isort>=5.12.0",
+    ]
+
+  [project.urls]
+    Homepage = "https://github.com/exonware/xwbots"
+    Documentation = "https://github.com/exonware/xwbots/docs"
+    Repository = "https://github.com/exonware/xwbots"
+    Issues = "https://github.com/exonware/xwbots/issues"

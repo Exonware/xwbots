@@ -1,0 +1,7 @@
+
+=========================== short test summary info ===========================
+ERROR tests/0.core/test_core_facade.py
+ERROR tests/3.advance/test_performance.py
+ERROR tests/3.advance/test_security.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!
+3 errors in 2.98s

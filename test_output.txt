@@ -1,0 +1,139 @@
+
+=================================== ERRORS ====================================
+______________ ERROR collecting tests/0.core/test_core_facade.py ______________
+ImportError while importing test module 'd:\OneDrive\DEV\exonware\xwbots\tests\0.core\test_core_facade.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\0.core\test_core_facade.py:13: in <module>
+    from exonware.xwbots import XWBot
+src\exonware\xwbots\__init__.py:26: in <module>
+    from exonware.xwsystem import get_logger
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\__init__.py:62: in <module>
+    from .io.serialization import (
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\io\__init__.py:72: in <module>
+    from .file import (
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\io\file\__init__.py:57: in <module>
+    from .file import XWFile
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\io\file\file.py:26: in <module>
+    from ...monitoring.performance_monitor import performance_monitor
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\monitoring\__init__.py:62: in <module>
+    from .tracing import (
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\monitoring\tracing.py:27: in <module>
+    from opentelemetry.sdk.trace import TracerProvider
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'opentelemetry.sdk'
+____________ ERROR collecting tests/3.advance/test_performance.py _____________
+ImportError while importing test module 'd:\OneDrive\DEV\exonware\xwbots\tests\3.advance\test_performance.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\3.advance\test_performance.py:15: in <module>
+    from exonware.xwbots import XWBot
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\exonware\xwbots\__init__.py:26: in <module>
+    from exonware.xwsystem import get_logger
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\__init__.py:174: in <module>
+    from .monitoring import GenericPerformanceManager, PerformanceRecommendation, HealthStatus
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\monitoring\__init__.py:62: in <module>
+    from .tracing import (
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\monitoring\tracing.py:27: in <module>
+    from opentelemetry.sdk.trace import TracerProvider
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'opentelemetry.sdk'
+------------------------------- Captured stdout -------------------------------
+[OK] [xwlazy] Installed: cachebox via pip (4.3s) [triggered by exonware.xwsystem.caching.external_caching_python]
+[OK] [xwlazy] Installed: cachetools via pip (1.87s) [triggered by exonware.xwsystem.caching.external_caching_python]
+[OK] [xwlazy] Installed: pylru via pip (1.96s) [triggered by exonware.xwsystem.caching.external_caching_python]
+[OK] [xwlazy] Installed: msgspec via pip (2.05s) [triggered by exonware.xwsystem.io.serialization.parsers.hybrid_parser]
+[OK] [xwlazy] Installed: orjson via pip (2.15s) [triggered by exonware.xwsystem.io.serialization.parsers.hybrid_parser]
+[OK] [xwlazy] Installed: hyperlight_hyperjson via pip (1.99s) [triggered by exonware.xwsystem.io.serialization.parsers.hyperjson_parser]
+[OK] [xwlazy] Installed: json5 via pip (2.09s) [triggered by exonware.xwsystem.io.serialization.formats.text.json5]
+[OK] [xwlazy] Installed: PyYAML via pip (2.24s) [triggered by exonware.xwsystem.io.serialization.formats.text.yaml]
+[OK] [xwlazy] Installed: tomli-w via pip (1.97s) [triggered by exonware.xwsystem.io.serialization.formats.text.toml]
+[OK] [xwlazy] Installed: xmltodict via pip (1.99s) [triggered by exonware.xwsystem.io.serialization.formats.text.xml]
+[OK] [xwlazy] Installed: dicttoxml via pip (2.42s) [triggered by exonware.xwsystem.io.serialization.formats.text.xml]
+[OK] [xwlazy] Installed: msgpack via pip (1.94s) [triggered by exonware.xwsystem.io.serialization.formats.binary.msgpack]
+[OK] [xwlazy] Installed: cbor2 via pip (2.19s) [triggered by exonware.xwsystem.io.serialization.formats.binary.cbor]
+[OK] [xwlazy] Installed: pymongo via pip (7.75s) [triggered by exonware.xwsystem.io.serialization.formats.binary.bson]
+[OK] [xwlazy] Installed: httpx via pip (6.2s) [triggered by exonware.xwsystem.http_client.client]
+[OK] [xwlazy] Installed: brotli via pip (1.91s) [triggered by httpx._decoders]
+[OK] [xwlazy] Installed: zstandard via pip (2.01s) [triggered by httpx._decoders]
+[OK] [xwlazy] Installed: rich via pip (4.29s) [triggered by httpx._main]
+[OK] [xwlazy] Installed: attrs via pip (2.17s) [triggered by rich.pretty]
+______________ ERROR collecting tests/3.advance/test_security.py ______________
+ImportError while importing test module 'd:\OneDrive\DEV\exonware\xwbots\tests\3.advance\test_security.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\3.advance\test_security.py:14: in <module>
+    from exonware.xwbots import XWBot
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\exonware\xwbots\__init__.py:26: in <module>
+    from exonware.xwsystem import get_logger
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\__init__.py:174: in <module>
+    from .monitoring import GenericPerformanceManager, PerformanceRecommendation, HealthStatus
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\monitoring\__init__.py:62: in <module>
+    from .tracing import (
+..\xwlazy\src\exonware\xwlazy.py:1041: in _intercepting_import
+    return _original_builtins_import(name, globals, locals, fromlist, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\xwsystem\src\exonware\xwsystem\monitoring\tracing.py:27: in <module>
+    from opentelemetry.sdk.trace import TracerProvider
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'opentelemetry.sdk'
+=========================== short test summary info ===========================
+ERROR tests/0.core/test_core_facade.py
+ERROR tests/3.advance/test_performance.py
+ERROR tests/3.advance/test_security.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!
+3 errors in 58.67s

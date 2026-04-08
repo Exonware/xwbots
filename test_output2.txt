@@ -1,0 +1,59 @@
+
+=================================== ERRORS ====================================
+______________ ERROR collecting tests/0.core/test_core_facade.py ______________
+ImportError while importing test module 'd:\OneDrive\DEV\exonware\xwbots\tests\0.core\test_core_facade.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\0.core\test_core_facade.py:13: in <module>
+    from exonware.xwbots import XWBot
+src\exonware\xwbots\__init__.py:27: in <module>
+    from exonware.xwstorage import XWStorage
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'exonware.xwstorage'
+____________ ERROR collecting tests/3.advance/test_performance.py _____________
+ImportError while importing test module 'd:\OneDrive\DEV\exonware\xwbots\tests\3.advance\test_performance.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\3.advance\test_performance.py:15: in <module>
+    from exonware.xwbots import XWBot
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\exonware\xwbots\__init__.py:27: in <module>
+    from exonware.xwstorage import XWStorage
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'exonware.xwstorage'
+______________ ERROR collecting tests/3.advance/test_security.py ______________
+ImportError while importing test module 'd:\OneDrive\DEV\exonware\xwbots\tests\3.advance\test_security.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\3.advance\test_security.py:14: in <module>
+    from exonware.xwbots import XWBot
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\exonware\xwbots\__init__.py:27: in <module>
+    from exonware.xwstorage import XWStorage
+..\xwlazy\src\exonware\xwlazy.py:1044: in _intercepting_import
+    module = _original_builtins_import(name, globals, locals, fromlist, level)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'exonware.xwstorage'
+=========================== short test summary info ===========================
+ERROR tests/0.core/test_core_facade.py
+ERROR tests/3.advance/test_performance.py
+ERROR tests/3.advance/test_security.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!
+3 errors in 1.61s
