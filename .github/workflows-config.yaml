@@ -1,0 +1,8 @@
+projects:
+  xwbots:
+    repo: xwbots
+    package_main: exonware-xwbots
+    package_wrapper: xwbots
+    python_version: "3.12"
+    has_wrapper: true
+    uses_check_versions: true

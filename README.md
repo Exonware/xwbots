@@ -88,6 +88,6 @@ MIT — see [LICENSE](LICENSE). **Homepage:** https://exonware.com · **Reposito
 - Source validation: 56 async def definitions and 28 await usages under src/.
 - Use async APIs for I/O-heavy or concurrent workloads to improve throughput and responsiveness.
 <!-- async-support:end -->
-Version: 0.0.1.2 | Updated: 10-Apr-2026
+Version: 0.0.1.3 | Updated: 11-Apr-2026
 
 *Built with ❤️ by eXonware.com - Revolutionizing Python Development Since 2025*
