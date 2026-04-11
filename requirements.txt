@@ -20,18 +20,18 @@
 
 # Core eXonware dependencies
 # Source size (src/*): ~103.9 KB
-exonware-xwsystem
-exonware-xwstorage
-exonware-xwauth
-exonware-xwentity
-exonware-xwaction
-exonware-xwai
+exonware-xwsystem==0.9.0.38
+exonware-xwstorage==0.0.1.7
+exonware-xwauth==0.0.1.9
+exonware-xwentity==0.6.0.9
+exonware-xwaction==0.9.0.11
+exonware-xwai==0.0.1.3
 
 # =============================================================================
 # OPTIONAL DEPENDENCIES (Install with [full] extra)
 # =============================================================================
 
-# exonware-xwchat[full]  # Telegram: xwbots reuses xwchat (install with: pip install exonware-xwbots[full])
+# exonware-xwchat[full]==0.0.1.5  # Telegram: xwbots reuses xwchat (install with: pip install exonware-xwbots[full]==0.0.1.4)
 
 # =============================================================================
 # DEVELOPMENT AND TESTING DEPENDENCIES

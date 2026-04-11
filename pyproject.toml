@@ -23,7 +23,7 @@
 
 [project]
   name = "exonware-xwbots"
-  dynamic = ["version"]
+dynamic = ["version"]
   description = "Multi-platform bot framework for the eXonware ecosystem"
   readme = "README.md"
   requires-python = ">=3.12"
@@ -38,7 +38,7 @@
 
   [project.optional-dependencies]
     lazy = [
-      "exonware-xwlazy",
+      "exonware-xwlazy==1.0.1.80",
     ]
     api = [
       "fastapi>=0.104.0",
@@ -85,7 +85,7 @@
       "bottleneck",
     ]
     dev = [
-      "exonware-xwbots[full]",
+      "exonware-xwbots[full]==0.0.1.5",
       "pytest>=7.0.0",
       "pytest-asyncio>=0.21.0",
       "pytest-cov>=4.0.0",
