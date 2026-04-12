@@ -5,7 +5,7 @@ XWBotCommand - Command-based bot implementation.
 Company: eXonware.com
 Author: eXonware Backend Team
 Email: connect@exonware.com
-Version: 0.0.1.7
+Version: 0.0.1.8
 Generation Date: 07-Jan-2025
 """
 
@@ -25,6 +25,38 @@ from ..contracts import IMessage
 from .command_transport import command_context_from_message, parse_slash_command_text
 from ..defs import BotStatus, BotType, MessageType
 logger = get_logger(__name__)
+
+
+def _merge_xwaction_methods_for_agent(agent: Any) -> list[Any]:
+    """
+    Merge ``agent.get_actions()`` with MRO-based discovery for :class:`exonware.xwapi.client.xwclient.XWApiAgent`
+    so base ``@XWAction`` helpers (for example ``revive_auths``) stay visible even if ``get_actions()``
+    omits them after manual edits.
+    """
+    merged: dict[str, Any] = {}
+    get_actions = getattr(agent, "get_actions", None)
+    if callable(get_actions):
+        try:
+            for fn in get_actions() or []:
+                n = getattr(fn, "__name__", "") or ""
+                if n and getattr(fn, "xwaction", None) is not None:
+                    merged[n] = fn
+        except Exception:
+            logger.debug("get_actions() failed for %r", type(agent).__name__, exc_info=True)
+    try:
+        from exonware.xwapi.client.engines.native import discover_xwaction_bound_methods
+        from exonware.xwapi.client.xwclient import XWApiAgent
+
+        if isinstance(agent, XWApiAgent):
+            for fn in discover_xwaction_bound_methods(agent):
+                n = getattr(fn, "__name__", "") or ""
+                if not n or getattr(fn, "xwaction", None) is None:
+                    continue
+                merged.setdefault(n, fn)
+    except ImportError:
+        pass
+    return list(merged.values())
+
 
 # XWAction signature keys filled by the bot/runtime, not by the user in chat.
 _HELP_HIDDEN_ACTION_PARAMS = frozenset({"self", "session", "context", "message"})
@@ -730,15 +762,18 @@ class XWBotCommand(ABotCommand):
             # Add to api_agents as well
             self.add_api_agent(agent, name)
             # Discover actions from agent
-            if hasattr(agent, 'get_actions'):
-                actions = agent.get_actions()
+            if hasattr(agent, "get_actions") and callable(agent.get_actions):
+                actions = _merge_xwaction_methods_for_agent(agent)
             else:
                 # Fallback: try to discover actions manually
                 from inspect import getmembers, ismethod
+
                 actions = []
-                for name, method in getmembers(agent, predicate=ismethod):
-                    if hasattr(method, 'xwaction'):
+                for _meth_name, method in getmembers(agent, predicate=ismethod):
+                    if hasattr(method, "xwaction"):
                         actions.append(method)
+                if not actions:
+                    actions = _merge_xwaction_methods_for_agent(agent)
             logger.info(f"Observing agent '{name}' with {len(actions)} actions")
             # Create command handlers for each action
             for action in actions:
@@ -1017,6 +1052,32 @@ class XWBotCommand(ABotCommand):
             lines.append("")
         return "\n".join(lines).rstrip()
 
+    def transport_help_default_lines(self) -> list[str]:
+        """
+        Optional /help lines from the default chat provider (same default markup as :meth:`_build_help_default`).
+
+        Providers may implement ``help_default_markup_transport_lines(self) -> list[str]`` to document
+        slash controls they handle before dispatch (for example Telegram operator pause/resume).
+        """
+        prov = self.get_default_chat_provider()
+        fn = getattr(prov, "help_default_markup_transport_lines", None)
+        if callable(fn):
+            try:
+                out = fn()
+                if out:
+                    return list(out)
+            except Exception:
+                logger.debug("transport_help_default_lines failed for %r", type(prov).__name__, exc_info=True)
+        return []
+
+    def extra_help_default_lines(self) -> list[str]:
+        """
+        Optional extra /help lines in the same default markup dialect as :meth:`_build_help_default`
+        (*bold*, _italic_, `code`). Defaults to :meth:`transport_help_default_lines`; subclasses may
+        override to append product-specific notes.
+        """
+        return self.transport_help_default_lines()
+
     def _build_help_default(self) -> str:
         """Build help in default markup (*bold*, _italic_, `code`) for cache + Telegram formatters."""
         # Map cmd_name -> (agent_name, action) for XWAction metadata
@@ -1029,8 +1090,8 @@ class XWBotCommand(ABotCommand):
             agent_name: str | None = None
             found_action = None
             for ag_name, ag in self._observed_agents.items():
-                if hasattr(ag, "get_actions"):
-                    for action in ag.get_actions():
+                if hasattr(ag, "get_actions") and callable(getattr(ag, "get_actions")):
+                    for action in _merge_xwaction_methods_for_agent(ag):
                         xwaction = getattr(action, "xwaction", None)
                         if xwaction:
                             shortcut = (
@@ -1107,6 +1168,10 @@ class XWBotCommand(ABotCommand):
                 "`/cancel_all` — stop every in-progress command 🔒`owner, management` _(not scouts)_"
             )
         lines.append("")
+        extra_lines = self.extra_help_default_lines()
+        if extra_lines:
+            lines.extend(extra_lines)
+            lines.append("")
 
         for agent_name, commands in sorted(commands_by_agent.items()):
             lines.append(f"🧩 *{agent_name}*")

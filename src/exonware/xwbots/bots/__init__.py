@@ -5,7 +5,7 @@ Bot implementations package.
 Company: eXonware.com
 Author: eXonware Backend Team
 Email: connect@exonware.com
-Version: 0.0.1.7
+Version: 0.0.1.8
 """
 
 from .command_bot import XWBotCommand
