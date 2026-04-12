@@ -20,12 +20,12 @@
 
 # Core eXonware dependencies
 # Source size (src/*): ~107.8 KB
-exonware-xwsystem==0.9.0.38
-exonware-xwstorage==0.0.1.7
-exonware-xwauth==0.0.1.9
-exonware-xwentity==0.6.0.9
-exonware-xwaction==0.9.0.11
-exonware-xwai==0.0.1.3
+exonware-xwsystem==0.9.0.39
+exonware-xwstorage==0.0.1.8
+exonware-xwauth==0.0.1.10
+exonware-xwentity==0.6.0.11
+exonware-xwaction==0.9.0.12
+exonware-xwai==0.0.1.4
 
 # =============================================================================
 # OPTIONAL DEPENDENCIES (Install with [full] extra)
