@@ -6,7 +6,7 @@ This module provides multi-platform bot framework for the eXonware ecosystem.
 Company: eXonware.com
 Author: eXonware Backend Team
 Email: connect@exonware.com
-Version: 0.0.1.5
+Version: 0.0.1.6
 Generation Date: 07-Jan-2025
 """
 # =============================================================================
@@ -46,6 +46,7 @@ from .defs import (
 from .errors import (
     XWBotsError, XWBotError, XWPlatformError, XWCommandError, XWMessageError
 )
+from .runtime_status_log import RuntimeStatusLog
 __all__ = [
     # Version info
     "__version__",
@@ -88,4 +89,6 @@ __all__ = [
     "XWPlatformError",
     "XWCommandError",
     "XWMessageError",
+    # Runtime / operator status JSONL (host wiring; chat transports call sinks, they do not own this log)
+    "RuntimeStatusLog",
 ]

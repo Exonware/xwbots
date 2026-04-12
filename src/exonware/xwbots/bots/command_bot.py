@@ -5,7 +5,7 @@ XWBotCommand - Command-based bot implementation.
 Company: eXonware.com
 Author: eXonware Backend Team
 Email: connect@exonware.com
-Version: 0.0.1.5
+Version: 0.0.1.6
 Generation Date: 07-Jan-2025
 """
 
@@ -22,6 +22,7 @@ from exonware.xwsystem import get_logger
 from exonware.xwaction import ActionParameter
 from ..base import ABotCommand
 from ..contracts import IMessage
+from .command_transport import command_context_from_message, parse_slash_command_text
 from ..defs import BotStatus, BotType, MessageType
 logger = get_logger(__name__)
 
@@ -484,6 +485,16 @@ class XWBotCommand(ABotCommand):
             "healthy": self._status == BotStatus.RUNNING
         }
 
+    async def enrich_command_context(
+        self, command_name: str, message: IMessage, context: dict[str, Any]
+    ) -> None:
+        """
+        Hook for subclasses to populate ``context`` before :meth:`execute_command`.
+
+        Default: no-op. Typical uses: resolve ``user_roles``, persist transport metadata, etc.
+        """
+        return None
+
     def register_command(
         self,
         command_name: str,
@@ -599,19 +610,11 @@ class XWBotCommand(ABotCommand):
         Returns reply text or None if no command matched / empty.
         """
         text = (message.text or "").strip()
-        if not text:
-            return None
-        parts = text.split()
-        cmd = parts[0].lstrip("/")
+        cmd, _args = parse_slash_command_text(text)
         if not cmd:
             return None
-        context: dict[str, Any] = {}
-        if hasattr(message, "_message_data"):
-            data = getattr(message, "_message_data", {})
-            context.setdefault("user_id", data.get("user_id"))
-            context.setdefault("chat_id", data.get("chat_id"))
-            context.setdefault("username", data.get("username"))
-            context.setdefault("help_format", data.get("help_format"))
+        context = command_context_from_message(message)
+        await self.enrich_command_context(cmd, message, context)
         return await self.execute_command(cmd, message, context)
 
     async def execute_command(self, command_name: str, message: IMessage, context: dict[str, Any]) -> Any:
@@ -640,7 +643,7 @@ class XWBotCommand(ABotCommand):
                     return (
                         "🔒 Access denied\n\n"
                         f"Needed roles: {', '.join(required_roles)}\n"
-                        "Tip: check Google sheet / authorizer mapping for your Telegram @username."
+                        "Tip: check your account / authorizer mapping for required roles."
                     )
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(
