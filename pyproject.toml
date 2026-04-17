@@ -1,5 +1,5 @@
 
-# Source size (src/*): ~110.7 KB
+# Source size (src/*): ~124.5 KB
 [build-system]
   requires = ["setuptools>=68.0", "wheel"]
   build-backend = "setuptools.build_meta"
@@ -23,11 +23,13 @@
 
 [project]
   name = "exonware-xwbots"
-dynamic = ["version"]
+  dynamic = ["version"]
   description = "Multi-platform bot framework for the eXonware ecosystem"
   readme = "README.md"
   requires-python = ">=3.12"
-  authors = [{ name = "eXonware Backend Team", email = "connect@exonware.com" }]
+  authors = [
+    { name = "eXonware Backend Team", email = "connect@exonware.com" },
+  ]
   maintainers = []
   keywords = []
   classifiers = []
@@ -85,7 +87,7 @@ dynamic = ["version"]
       "bottleneck",
     ]
     dev = [
-      "exonware-xwbots[full]==0.0.1.8",
+      "exonware-xwbots[full]==0.0.1.10",
       "pytest>=7.0.0",
       "pytest-asyncio>=0.21.0",
       "pytest-cov>=4.0.0",

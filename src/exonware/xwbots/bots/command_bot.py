@@ -5,7 +5,7 @@ XWBotCommand - Command-based bot implementation.
 Company: eXonware.com
 Author: eXonware Backend Team
 Email: connect@exonware.com
-Version: 0.0.1.8
+Version: 0.0.1.10
 Generation Date: 07-Jan-2025
 """
 
@@ -13,6 +13,7 @@ import asyncio
 import functools
 import logging
 import re
+import weakref
 from types import SimpleNamespace
 from typing import Any, Optional, Callable, List, Union
 import inspect
@@ -26,6 +27,17 @@ from .command_transport import command_context_from_message, parse_slash_command
 from ..defs import BotStatus, BotType, MessageType
 logger = get_logger(__name__)
 
+# Read-only merge runs on every /help rebuild and Telegram menu lookup; cache per agent so we
+# do not walk MRO + re-log discovery on every message. Invalidate when XWApiAgent replaces `_actions`.
+_merge_xwaction_cache: weakref.WeakKeyDictionary[Any, tuple[int, list[Any]]] = weakref.WeakKeyDictionary()
+
+
+def _merge_actions_cache_generation(agent: Any) -> int:
+    acts = getattr(agent, "_actions", None)
+    if isinstance(acts, list):
+        return id(acts) ^ (len(acts) << 20)
+    return id(agent)
+
 
 def _merge_xwaction_methods_for_agent(agent: Any) -> list[Any]:
     """
@@ -33,6 +45,11 @@ def _merge_xwaction_methods_for_agent(agent: Any) -> list[Any]:
     so base ``@XWAction`` helpers (for example ``revive_auths``) stay visible even if ``get_actions()``
     omits them after manual edits.
     """
+    gen = _merge_actions_cache_generation(agent)
+    hit = _merge_xwaction_cache.get(agent)
+    if hit is not None and hit[0] == gen:
+        return hit[1]
+
     merged: dict[str, Any] = {}
     get_actions = getattr(agent, "get_actions", None)
     if callable(get_actions):
@@ -55,11 +72,142 @@ def _merge_xwaction_methods_for_agent(agent: Any) -> list[Any]:
                 merged.setdefault(n, fn)
     except ImportError:
         pass
-    return list(merged.values())
+    out = list(merged.values())
+    _merge_xwaction_cache[agent] = (gen, out)
+    return out
 
 
 # XWAction signature keys filled by the bot/runtime, not by the user in chat.
 _HELP_HIDDEN_ACTION_PARAMS = frozenset({"self", "session", "context", "message"})
+
+def _help_param_key(name: str) -> str:
+    return (name or "").strip().lower().replace("-", "_")
+
+
+def _help_type_label(py_type: Any) -> str:
+    """Short type label for help (avoid naked 'str' in user-facing text)."""
+    if py_type is None:
+        return "value"
+    n = getattr(py_type, "__name__", "") or ""
+    return {
+        "str": "text",
+        "int": "number",
+        "float": "number",
+        "bool": "on/off",
+        "dict": "json",
+        "list": "list",
+        "Any": "value",
+    }.get(n, (n or "value").lower())
+
+
+def _help_example_for_param_fallback(name: str, label: str) -> str:
+    """Tiny fallback when ``exonware-xwschema`` is not installed or has no mapping."""
+    k = _help_param_key(name)
+    if label == "on/off":
+        return "`false`"
+    if label == "number":
+        return "`1`"
+    if "short" in k and "id" in k:
+        return "`RU-xxxxxx`"
+    if "telegram" in k or k.endswith("_username") or "username" in k:
+        return "`@name`"
+    if "link" in k or "url" in k:
+        return "`https://…`"
+    return "`…`"
+
+
+def _help_schema_hint_example(pname: str, pinfo: Any, label: str) -> str:
+    """
+    Prefer :mod:`exonware.xwschema.types_base` (JSON Schema ``format`` / param name),
+    then :func:`_help_example_for_param_fallback`.
+    """
+    fmt = getattr(pinfo, "format", None)
+    fmt_s = fmt.strip() if isinstance(fmt, str) else None
+    try:
+        from exonware.xwschema.types_base import (
+            help_example_for_param as _xws_ex,
+            help_pattern_for_param as _xws_pat,
+        )
+
+        raw = _xws_ex(param_name=pname, json_schema_format=fmt_s)
+        if raw:
+            safe_raw = str(raw).replace("`", "'")[:40]
+            return f"`{safe_raw}`"
+        pat2 = _xws_pat(param_name=pname, json_schema_format=fmt_s)
+        if pat2:
+            safe = _help_truncate(str(pat2).replace("`", "'"), 44)
+            return f"regex `{safe}`"
+    except ImportError:
+        pass
+    return _help_example_for_param_fallback(pname, label)
+
+
+def _help_format_param_for_help(pinfo: Any, pname: str) -> str:
+    """One compact fragment: `name` type e.g. `sample` (+ optional hint)."""
+    ptype = getattr(pinfo, "param_type", None) or getattr(pinfo, "type", None)
+    label = _help_type_label(ptype)
+    required = bool(getattr(pinfo, "required", True))
+    if getattr(pinfo, "has_default", False):
+        required = False
+    ex_obj = getattr(pinfo, "example", None)
+    if ex_obj is not None and ex_obj != "":
+        exs = str(ex_obj).replace("`", "'")
+        exs = _help_truncate(exs, 28)
+        eg = f"`{exs}`"
+    else:
+        enum = getattr(pinfo, "enum", None)
+        if isinstance(enum, (list, tuple)) and enum:
+            eg = f"`{enum[0]}`"
+        else:
+            pat = getattr(pinfo, "pattern", None)
+            if pat:
+                pat_s = _help_truncate(str(pat).replace("`", "'"), 44)
+                eg = f"regex `{pat_s}`"
+            else:
+                eg = _help_schema_hint_example(pname, pinfo, label)
+    opt = "" if required else " _opt_"
+    fmt = getattr(pinfo, "format", None)
+    fmt_hint = f" · `{fmt}`" if isinstance(fmt, str) and fmt.strip() else ""
+    return f"`{pname}` {label} e.g. {eg}{fmt_hint}{opt}"
+
+
+def _help_return_label(xw: Any) -> str | None:
+    rt = getattr(xw, "return_type", None)
+    if rt is None:
+        return None
+    n = getattr(rt, "__name__", str(rt))
+    return {"dict": "json", "str": "text", "Any": "value", "int": "number", "bool": "on/off"}.get(n, n.lower())
+
+
+def _help_arg_line_for_cmd(
+    _cmd: str,
+    xw: Any | None,
+    param_list: Optional[List[ActionParameter]],
+) -> str | None:
+    segs: list[str] = []
+    extra = 0
+    if xw is not None:
+        params = getattr(xw, "parameters", None) or getattr(xw, "_parameters", None)
+        if isinstance(params, dict) and params:
+            items = [
+                (pname, pinfo)
+                for pname, pinfo in params.items()
+                if pname not in _HELP_HIDDEN_ACTION_PARAMS
+            ]
+            extra = max(0, len(items) - 7)
+            for pname, pinfo in items[:7]:
+                segs.append(_help_format_param_for_help(pinfo, str(pname)))
+    if not segs and param_list:
+        items2 = [p for p in param_list if p.name not in _HELP_HIDDEN_ACTION_PARAMS]
+        extra = max(0, len(items2) - 7)
+        for p in items2[:7]:
+            segs.append(_help_format_param_for_help(p, p.name))
+    if not segs:
+        return None
+    line = " · ".join(segs)
+    if extra:
+        line += f" · +{extra} more"
+    return _help_truncate(line, 220)
 
 # Commands that must not be tracked as cancellable work (avoid self-cancel noise).
 _CANCEL_SKIP_INFLIGHT_TRACK = frozenset({"cancel", "cancel_all"})
@@ -482,6 +630,16 @@ class XWBotCommand(ABotCommand):
             self._cmd_cancel_all,
             roles=["owner", "management"],
         )
+        # Re-register help/users/roles via @XWAction so they share the observed-action path.
+        snap_roles = {k: self._command_roles.get(k) for k in ("help", "users", "roles")}
+        snap_handlers = {k: self._command_handlers.get(k) for k in ("help", "users", "roles")}
+        from .ui_actions import XWBotUiAgent
+
+        self.observe_api_agent(XWBotUiAgent(self, snap_handlers), "xwbots_ui")
+        for k in ("help", "users", "roles"):
+            r = snap_roles.get(k)
+            if r is not None:
+                self._command_roles[k] = list(r)
         self._status = BotStatus.RUNNING
         self._start_time = datetime.utcnow()
         logger.info(f"Command bot '{self._name}' started")
@@ -630,6 +788,9 @@ class XWBotCommand(ABotCommand):
             def on_message(ctx: Any) -> Any:
                 return self.handle(_message_from_context(ctx))
             prov.set_message_handler(on_message)
+            attach = getattr(prov, "attach_xw_bot_command", None)
+            if callable(attach):
+                attach(self)
             await prov.start_listening()
         else:
             logger.warning("Default chat provider has no set_message_handler/start_listening; run() only started the bot.")
@@ -670,8 +831,12 @@ class XWBotCommand(ABotCommand):
             # Check role-based access if roles are required
             required_roles = self._command_roles.get(command_name, [])
             if required_roles:
-                user_roles = context.get('user_roles', [])
-                if not any(role in user_roles for role in required_roles):
+                raw_ur = context.get("user_roles", [])
+                if not isinstance(raw_ur, list):
+                    raw_ur = []
+                user_roles_lc = {str(r).strip().lower() for r in raw_ur if r is not None}
+                req_lc = [str(r).strip().lower() for r in required_roles if r is not None]
+                if not any(r in user_roles_lc for r in req_lc):
                     return (
                         "🔒 Access denied\n\n"
                         f"Needed roles: {', '.join(required_roles)}\n"
@@ -893,11 +1058,16 @@ class XWBotCommand(ABotCommand):
                         except Exception:
                             pass
                         # #endregion
-                        # Execute action without blocking the event loop (sync LMAM/API code would block and break reply sending)
+                        # Execute action without blocking the event loop (sync LMAM/API code would block and break reply sending).
+                        # @XWAction often wraps async callables so iscoroutinefunction(act) is False; the sync wrapper may return a coroutine.
                         if asyncio.iscoroutinefunction(act):
                             result = await act(**kwargs)
                         else:
-                            result = await asyncio.to_thread(act, **kwargs)
+                            maybe = await asyncio.to_thread(act, **kwargs)
+                            if inspect.isawaitable(maybe):
+                                result = await maybe
+                            else:
+                                result = maybe
                         return _coerce_observed_action_result(result)
                     except asyncio.CancelledError:
                         raise
@@ -1078,6 +1248,116 @@ class XWBotCommand(ABotCommand):
         """
         return self.transport_help_default_lines()
 
+    def _action_binding_for_registered_command(self, cmd_name: str) -> tuple[str | None, Any]:
+        """Return ``(observed_agent_name, bound_action)`` for a registered slash command, if known."""
+        for ag_name, ag in self._observed_agents.items():
+            if not (hasattr(ag, "get_actions") and callable(getattr(ag, "get_actions"))):
+                continue
+            for action in _merge_xwaction_methods_for_agent(ag):
+                xwaction = getattr(action, "xwaction", None)
+                if not xwaction:
+                    continue
+                shortcut = (
+                    getattr(xwaction, "cmd_shortcut", None)
+                    or getattr(xwaction, "_cmd_shortcut", None)
+                    or getattr(action, "__name__", "")
+                )
+                if shortcut == cmd_name:
+                    return ag_name, action
+        return None, None
+
+    def _telegram_menu_description_for(self, cmd: str) -> str:
+        """Short description for Telegram ``BotCommand`` (max 256 chars on wire; we keep <= 220)."""
+        _ag, action = self._action_binding_for_registered_command(cmd)
+        xw = getattr(action, "xwaction", None) if action is not None else None
+        if xw:
+            summary = getattr(xw, "summary", None) or getattr(xw, "_summary", None)
+            desc = getattr(xw, "description", None) or getattr(xw, "_description", None)
+            text = (summary or desc or "").strip()
+            if text:
+                return _help_truncate(text, 220)
+        if cmd == "help":
+            return "This command list"
+        if cmd == "start":
+            return "Welcome and setup"
+        if cmd == "cancel":
+            return "Cancel your in-progress commands"
+        if cmd == "cancel_all":
+            return "Cancel in-progress commands for everyone"
+        if cmd == "status":
+            return "Auth and subsystem status"
+        if cmd == "roles":
+            return "Your roles and recorded groups"
+        if cmd == "users":
+            return "List users matching role AND query"
+        return _help_truncate(cmd.replace("_", " "), 220)
+
+    def telegram_command_menu_entries(
+        self,
+        *,
+        user_roles: list[str] | None,
+        is_telegram_operator: bool,
+        menu_mode: str = "strict",
+        include_transport_menu: bool = True,
+    ) -> list[tuple[str, str]]:
+        """
+        Build ``(command, description)`` pairs for Telegram ``setMyCommands`` (command without ``/``).
+
+        ``menu_mode``:
+          - ``strict``: only commands the user's roles may run (case-insensitive role match), same idea
+            as :meth:`execute_command`. Use with ``BotCommandScopeChatMember`` in groups.
+          - ``full``: every registered slash command (up to Telegram's 100 cap). Needed for private
+            chats: Telegram does **not** support a different command list per user there, so the menu
+            cannot be both global and role-filtered; access is still enforced when the command runs.
+
+        When ``include_transport_menu`` is True and ``is_telegram_operator`` is True, appends transport
+        slash tokens handled by :class:`exonware.xwchat.providers.telegram.TelegramChatProvider`.
+        """
+        ur: list[str] = [str(r) for r in (user_roles or []) if r is not None]
+        ur_lc = {str(r).strip().lower() for r in ur}
+
+        def allowed(required: list[str]) -> bool:
+            if not required:
+                return True
+            req_lc = [str(r).strip().lower() for r in required if r is not None]
+            return any(r in ur_lc for r in req_lc)
+
+        use_full = (menu_mode or "").strip().lower() == "full"
+
+        priority = ("help", "start", "cancel", "cancel_all", "status")
+        seen: set[str] = set()
+        out: list[tuple[str, str]] = []
+        for cmd in priority:
+            if cmd not in self._command_handlers:
+                continue
+            req = self._command_roles.get(cmd) or []
+            if not use_full and not allowed(req):
+                continue
+            out.append((cmd, self._telegram_menu_description_for(cmd)))
+            seen.add(cmd)
+        for cmd in sorted(self._command_handlers.keys()):
+            if cmd in seen:
+                continue
+            req = self._command_roles.get(cmd) or []
+            if not use_full and not allowed(req):
+                continue
+            out.append((cmd, self._telegram_menu_description_for(cmd)))
+            seen.add(cmd)
+        if include_transport_menu and is_telegram_operator:
+            for c, d in (
+                ("pause", "Pause inbound (queue users)"),
+                ("stop", "Pause inbound (alias)"),
+                ("resume", "Resume inbound + drain queue"),
+                ("restart", "Stop listener (restart host process)"),
+                ("pending", "Show paused FIFO queue"),
+                ("log_chat", "Tail chat audit JSONL"),
+                ("log_status", "Tail runtime status log"),
+            ):
+                if len(out) >= 100:
+                    break
+                out.append((c, d))
+        return out[:100]
+
     def _build_help_default(self) -> str:
         """Build help in default markup (*bold*, _italic_, `code`) for cache + Telegram formatters."""
         # Map cmd_name -> (agent_name, action) for XWAction metadata
@@ -1113,60 +1393,48 @@ class XWBotCommand(ABotCommand):
                 standalone_commands.append(cmd_name)
 
         def _one_line_for_cmd(cmd: str) -> tuple[str, str | None]:
-            """Return (main command line, optional indented detail line). No bullet glyphs."""
-            roles = self._command_roles.get(cmd, [])
-            lock = f" 🔒`{', '.join(roles)}`" if roles else ""
+            """Return (main line, optional second line: roles + args + return)."""
+            roles = self._command_roles.get(cmd, []) or []
+            role_line = (
+                "_Roles:_ none required"
+                if not roles
+                else "_Roles:_ one of " + " ".join(f"`{r}`" for r in roles)
+            )
             blurb: str | None = None
-            extras: list[str] = []
+            xw_obj: Any | None = None
             if cmd in cmd_action_map:
                 _an, action = cmd_action_map[cmd]
-                xw = getattr(action, "xwaction", None)
-                if xw:
-                    summary = getattr(xw, "summary", None) or getattr(xw, "_summary", None)
-                    desc = getattr(xw, "description", None) or getattr(xw, "_description", None)
+                xw_obj = getattr(action, "xwaction", None)
+                if xw_obj:
+                    summary = getattr(xw_obj, "summary", None) or getattr(xw_obj, "_summary", None)
+                    desc = getattr(xw_obj, "description", None) or getattr(xw_obj, "_description", None)
                     text = (summary or desc or "").strip()
                     if text:
-                        blurb = _help_truncate(text, 140)
-                    params = getattr(xw, "parameters", None) or getattr(xw, "_parameters", None)
-                    if isinstance(params, dict) and params:
-                        parts: list[str] = []
-                        for pname, pinfo in params.items():
-                            if pname in _HELP_HIDDEN_ACTION_PARAMS:
-                                continue
-                            ptype = getattr(pinfo, "type", None)
-                            type_str = getattr(ptype, "__name__", str(ptype)) if ptype is not None else "any"
-                            req = getattr(pinfo, "required", True)
-                            parts.append(f"{pname}:{type_str}" + ("" if req else "?"))
-                        if parts:
-                            extras.append("args: " + ", ".join(parts[:8]) + ("…" if len(parts) > 8 else ""))
-                    rt = getattr(xw, "return_type", None)
-                    if rt is not None:
-                        extras.append("→ " + getattr(rt, "__name__", str(rt)))
+                        blurb = _help_truncate(text, 88)
             param_list = self._command_parameters.get(cmd)
-            if param_list and not extras:
-                extras.append("args: " + ", ".join(str(p) for p in param_list[:6]))
-            sub = None
-            if extras:
-                sub = "   " + " · ".join(extras)
-            main = f"`/{cmd}`" + (f" — {blurb}" if blurb else "") + lock
+            arg_line = _help_arg_line_for_cmd(cmd, xw_obj, param_list)
+            ret_lbl = _help_return_label(xw_obj) if xw_obj is not None else None
+            detail_parts: list[str] = [role_line]
+            if arg_line:
+                detail_parts.append("_Args:_ " + arg_line)
+            if ret_lbl:
+                detail_parts.append("_Returns:_ `" + ret_lbl + "`")
+            sub = "   " + " · ".join(detail_parts) if detail_parts else None
+            main = f"`/{cmd}`" + (f" — {blurb}" if blurb else "")
             return main, sub
 
         lines: list[str] = [
             f"📖 *{self._name}*",
             "",
-            "_Commands use a slash. Locked commands need the right role in the sheet._",
+            "*Slash commands* · roles from your access sheet · 🔒 = needs that role · args: `name` type e.g. `sample`",
             "",
             "*⚡ Quick*",
-            "`/help` — this list",
+            "`/help` · this list · `/start` · onboard",
         ]
-        if "start" in self._command_handlers:
-            lines.append("`/start` — welcome / setup")
         if "cancel" in self._command_handlers:
-            lines.append("`/cancel` — stop your in-progress commands (this account)")
+            lines.append("`/cancel` · stop *your* in-flight commands")
         if "cancel_all" in self._command_handlers:
-            lines.append(
-                "`/cancel_all` — stop every in-progress command 🔒`owner, management` _(not scouts)_"
-            )
+            lines.append("`/cancel_all` · stop all in-flight jobs 🔒`owner` `management` _(not scouts)_")
         lines.append("")
         extra_lines = self.extra_help_default_lines()
         if extra_lines:
@@ -1174,7 +1442,8 @@ class XWBotCommand(ABotCommand):
             lines.append("")
 
         for agent_name, commands in sorted(commands_by_agent.items()):
-            lines.append(f"🧩 *{agent_name}*")
+            pretty = str(agent_name).replace("_", " ").strip() or agent_name
+            lines.append(f"🧩 *{pretty}*")
             for cmd in sorted(commands):
                 main, sub = _one_line_for_cmd(cmd)
                 lines.append(main)
@@ -1183,7 +1452,7 @@ class XWBotCommand(ABotCommand):
             lines.append("")
 
         if standalone_commands:
-            lines.append("*📎 Other commands*")
+            lines.append("*📎 Other*")
             for cmd in sorted(standalone_commands):
                 main, sub = _one_line_for_cmd(cmd)
                 lines.append(main)
@@ -1191,5 +1460,6 @@ class XWBotCommand(ABotCommand):
                     lines.append(sub)
             lines.append("")
 
-        lines.append("💡 _Send /help anytime._")
+        lines.append("_Telegram trims long replies; the / menu shows up to 100 commands._")
+        lines.append("💡 `/help` anytime.")
         return "\n".join(lines).rstrip()
