@@ -6,7 +6,7 @@ This module provides multi-platform bot framework for the eXonware ecosystem.
 Company: eXonware.com
 Author: eXonware Backend Team
 Email: connect@exonware.com
-Version: 0.0.1.10
+Version: 0.0.1.11
 Generation Date: 07-Jan-2025
 """
 # =============================================================================

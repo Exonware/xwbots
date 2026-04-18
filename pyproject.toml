@@ -1,5 +1,5 @@
 
-# Source size (src/*): ~124.5 KB
+# Source size (src/*): ~122.7 KB
 [build-system]
   requires = ["setuptools>=68.0", "wheel"]
   build-backend = "setuptools.build_meta"
@@ -87,7 +87,7 @@
       "bottleneck",
     ]
     dev = [
-      "exonware-xwbots[full]==0.0.1.10",
+      "exonware-xwbots[full]==0.0.1.11",
       "pytest>=7.0.0",
       "pytest-asyncio>=0.21.0",
       "pytest-cov>=4.0.0",

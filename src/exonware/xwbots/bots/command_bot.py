@@ -5,7 +5,7 @@ XWBotCommand - Command-based bot implementation.
 Company: eXonware.com
 Author: eXonware Backend Team
 Email: connect@exonware.com
-Version: 0.0.1.10
+Version: 0.0.1.11
 Generation Date: 07-Jan-2025
 """
 
@@ -1027,37 +1027,6 @@ class XWBotCommand(ABotCommand):
                                 _safe_context_for_log(exec_context),
                                 kw_log,
                             )
-                        # #region agent log
-                        try:
-                            import json
-                            import time
-                            from pathlib import Path
-
-                            _dbg = Path.cwd() / "debug-817459.log"
-                            ur = exec_context.get("user_roles")
-                            with _dbg.open("a", encoding="utf-8") as _df:
-                                _df.write(
-                                    json.dumps(
-                                        {
-                                            "sessionId": "817459",
-                                            "hypothesisId": "H-ctx",
-                                            "runId": "post-fix",
-                                            "location": "xwbots/command_bot.observe_api_agent",
-                                            "message": "invoke_action_kwargs",
-                                            "data": {
-                                                "act": getattr(act, "__name__", str(act)),
-                                                "kwargs_keys": sorted(kwargs.keys()),
-                                                "has_context_kw": "context" in kwargs,
-                                                "user_roles_len": len(ur) if isinstance(ur, list) else None,
-                                            },
-                                            "timestamp": int(time.time() * 1000),
-                                        }
-                                    )
-                                    + "\n"
-                                )
-                        except Exception:
-                            pass
-                        # #endregion
                         # Execute action without blocking the event loop (sync LMAM/API code would block and break reply sending).
                         # @XWAction often wraps async callables so iscoroutinefunction(act) is False; the sync wrapper may return a coroutine.
                         if asyncio.iscoroutinefunction(act):

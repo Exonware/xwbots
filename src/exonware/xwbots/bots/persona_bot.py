@@ -5,7 +5,7 @@ XWBotPersona - Persona-based conversational bot implementation.
 Company: eXonware.com
 Author: eXonware Backend Team
 Email: connect@exonware.com
-Version: 0.0.1.10
+Version: 0.0.1.11
 Generation Date: 07-Jan-2025
 """
 
